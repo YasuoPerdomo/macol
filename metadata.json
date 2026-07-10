@@ -1,0 +1,6 @@
+{
+  "name": "Plantilla de Finanzas Azul",
+  "description": "Una plantilla de finanzas interactiva en tonos azul perla, azul acero y azul marino, con seguimiento mensual, gráficos de barras y circulares, y calendario de vencimientos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

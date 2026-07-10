@@ -131,7 +131,15 @@ export default function App() {
 
   // Retrieve current selected month full details
   const currentMonthData = useMemo(() => {
-    return allMonthsData[currentMonthKey] || getInitialData()[currentMonthKey];
+    const rawData = allMonthsData[currentMonthKey] || getInitialData()[currentMonthKey];
+    return {
+      ...rawData,
+      incomes: rawData.incomes || [],
+      fixedExpenses: rawData.fixedExpenses || [],
+      variableExpenses: rawData.variableExpenses || [],
+      debts: rawData.debts || [],
+      savings: rawData.savings || []
+    };
   }, [allMonthsData, currentMonthKey]);
 
   const currentMonthObj = useMemo(() => {
@@ -145,20 +153,20 @@ export default function App() {
 
   // Calculations for current month
   const totals = useMemo(() => {
-    const incomesBudget = currentMonthData.incomes.reduce((s, item) => s + (item.budget || 0), 0);
-    const incomesReal = currentMonthData.incomes.reduce((s, item) => s + (item.real || 0), 0);
+    const incomesBudget = (currentMonthData.incomes || []).reduce((s, item) => s + (item.budget || 0), 0);
+    const incomesReal = (currentMonthData.incomes || []).reduce((s, item) => s + (item.real || 0), 0);
 
-    const fixedExpensesBudget = currentMonthData.fixedExpenses.reduce((s, item) => s + (item.budget || 0), 0);
-    const fixedExpensesReal = currentMonthData.fixedExpenses.reduce((s, item) => s + (item.real || 0), 0);
+    const fixedExpensesBudget = (currentMonthData.fixedExpenses || []).reduce((s, item) => s + (item.budget || 0), 0);
+    const fixedExpensesReal = (currentMonthData.fixedExpenses || []).reduce((s, item) => s + (item.real || 0), 0);
 
-    const variableExpensesBudget = currentMonthData.variableExpenses.reduce((s, item) => s + (item.budget || 0), 0);
-    const variableExpensesReal = currentMonthData.variableExpenses.reduce((s, item) => s + (item.real || 0), 0);
+    const variableExpensesBudget = (currentMonthData.variableExpenses || []).reduce((s, item) => s + (item.budget || 0), 0);
+    const variableExpensesReal = (currentMonthData.variableExpenses || []).reduce((s, item) => s + (item.real || 0), 0);
 
-    const debtsBudget = currentMonthData.debts.reduce((s, item) => s + (item.budget || 0), 0);
-    const debtsReal = currentMonthData.debts.reduce((s, item) => s + (item.real || 0), 0);
+    const debtsBudget = (currentMonthData.debts || []).reduce((s, item) => s + (item.budget || 0), 0);
+    const debtsReal = (currentMonthData.debts || []).reduce((s, item) => s + (item.real || 0), 0);
 
-    const savingsBudget = currentMonthData.savings.reduce((s, item) => s + (item.budget || 0), 0);
-    const savingsReal = currentMonthData.savings.reduce((s, item) => s + (item.real || 0), 0);
+    const savingsBudget = (currentMonthData.savings || []).reduce((s, item) => s + (item.budget || 0), 0);
+    const savingsReal = (currentMonthData.savings || []).reduce((s, item) => s + (item.real || 0), 0);
 
     const totalExpensesBudget = fixedExpensesBudget + variableExpensesBudget;
     const totalExpensesReal = fixedExpensesReal + variableExpensesReal;

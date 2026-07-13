@@ -33,6 +33,7 @@ interface UseFirebaseDataProps {
 export function useFirebaseData({ coupleId, userId, userName }: UseFirebaseDataProps) {
   const [allMonthsData, setAllMonthsData] = useState<Record<string, MonthlyData>>(getInitialData());
   const [acumuladoMap, setAcumuladoMap] = useState<Record<string, { budget: number; real: number }>>({});
+  const [annualLimit, setAnnualLimit] = useState<number>(2500000);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [newNotification, setNewNotification] = useState<ActivityItem | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -49,6 +50,9 @@ export function useFirebaseData({ coupleId, userId, userName }: UseFirebaseDataP
         }
         if (data.acumulado) {
           setAcumuladoMap(data.acumulado);
+        }
+        if (data.annualLimit !== undefined) {
+          setAnnualLimit(data.annualLimit);
         }
       }
       setDataLoaded(true);
@@ -117,6 +121,16 @@ export function useFirebaseData({ coupleId, userId, userName }: UseFirebaseDataP
     [coupleId]
   );
 
+  // Save annual limit
+  const saveAnnualLimit = useCallback(
+    async (newLimit: number) => {
+      if (!coupleId) return;
+      await setDoc(doc(db, 'couples', coupleId, 'data', 'monthlyData'), { annualLimit: newLimit }, { merge: true });
+      setAnnualLimit(newLimit);
+    },
+    [coupleId]
+  );
+
   // Log an activity
   const logActivity = useCallback(
     async (action: string) => {
@@ -164,11 +178,13 @@ export function useFirebaseData({ coupleId, userId, userName }: UseFirebaseDataP
   return {
     allMonthsData,
     acumuladoMap,
+    annualLimit,
     activities,
     newNotification,
     dataLoaded,
     saveMonthsData,
     saveAcumulado,
+    saveAnnualLimit,
     logActivity,
     dismissNotification,
   };

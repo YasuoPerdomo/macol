@@ -200,9 +200,9 @@ export default function App() {
 
   // Handlers for table item updating
   const handleUpdateItem = (tableType: 'incomes' | 'fixedExpenses' | 'variableExpenses' | 'debts' | 'savings', id: string, field: string, value: any) => {
-    setAllMonthsData((prev) => {
+    setAllMonthsData((prev: any) => {
       const monthData = { ...prev[currentMonthKey] };
-      const list = [...(monthData[tableType] as any[])];
+      const list = [...((monthData[tableType] as any[]) || [])];
       const idx = list.findIndex((item) => item.id === id);
       if (idx !== -1) {
         list[idx] = { ...list[idx], [field]: value };
@@ -221,9 +221,9 @@ export default function App() {
   };
 
   const handleAddItem = (tableType: 'incomes' | 'fixedExpenses' | 'variableExpenses' | 'debts' | 'savings') => {
-    setAllMonthsData((prev) => {
+    setAllMonthsData((prev: any) => {
       const monthData = { ...prev[currentMonthKey] };
-      const list = [...(monthData[tableType] as any[])];
+      const list = [...((monthData[tableType] as any[]) || [])];
       
       const newId = `${tableType.charAt(0)}-${Date.now()}`;
       let newItem: any = { id: newId, description: '', budget: 0, real: 0 };
@@ -240,17 +240,19 @@ export default function App() {
   };
 
   const handleDeleteItem = (tableType: 'incomes' | 'fixedExpenses' | 'variableExpenses' | 'debts' | 'savings', id: string) => {
-    const list = (allMonthsData[currentMonthKey] as any)?.[tableType] || [];
-    const item = list.find((i: any) => i.id === id);
-    const itemName = item?.description || 'elemento';
+    if (window.confirm('¿Estás seguro de que deseas eliminar este elemento?')) {
+      const list = (allMonthsData[currentMonthKey] as any)?.[tableType] || [];
+      const item = list.find((i: any) => i.id === id);
+      const itemName = item?.description || 'elemento';
 
-    setAllMonthsData((prev) => {
-      const monthData = { ...prev[currentMonthKey] };
-      const list = [...(monthData[tableType] as any[])];
-      monthData[tableType] = list.filter((item) => item.id !== id) as any;
-      return { ...prev, [currentMonthKey]: monthData };
-    });
-    firebaseData.logActivity(`Eliminó '${itemName}' de ${tableTypeNames[tableType]} (${currentMonthData.monthName})`);
+      setAllMonthsData((prev: any) => {
+        const monthData = { ...prev[currentMonthKey] };
+        const list = [...((monthData[tableType] as any[]) || [])];
+        monthData[tableType] = list.filter((item) => item.id !== id) as any;
+        return { ...prev, [currentMonthKey]: monthData };
+      });
+      firebaseData.logActivity(`Eliminó '${itemName}' de ${tableTypeNames[tableType]} (${currentMonthData.monthName})`);
+    }
   };
 
   // Handler for updating the current month's "Acumulado" balance

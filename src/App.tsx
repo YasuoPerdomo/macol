@@ -60,11 +60,7 @@ export default function App() {
     return saved === 'true';
   });
 
-  // Global annual budget limit
-  const [annualLimit, setAnnualLimit] = useState<number>(() => {
-    const saved = localStorage.getItem('finance_annual_limit');
-    return saved ? parseFloat(saved) : 2500000; // default 2,500,000 S/
-  });
+
 
   // Current month state (tabs at the bottom): default to 'Sep' (Septiembre)
   const [currentMonthKey, setCurrentMonthKey] = useState('Sep');
@@ -72,6 +68,7 @@ export default function App() {
   // Use Firebase data for allMonthsData and acumuladoMap
   const allMonthsData = firebaseData.allMonthsData;
   const acumuladoMap = firebaseData.acumuladoMap;
+  const annualLimit = firebaseData.annualLimit;
   const setAllMonthsData = (updater: any) => {
     const newData = typeof updater === 'function' ? updater(allMonthsData) : updater;
     firebaseData.saveMonthsData(newData);
@@ -79,6 +76,10 @@ export default function App() {
   const setAcumuladoMap = (updater: any) => {
     const newData = typeof updater === 'function' ? updater(acumuladoMap) : updater;
     firebaseData.saveAcumulado(newData);
+  };
+  const setAnnualLimit = (updater: any) => {
+    const newData = typeof updater === 'function' ? updater(annualLimit) : updater;
+    firebaseData.saveAnnualLimit(newData);
   };
 
   useEffect(() => {
@@ -89,9 +90,6 @@ export default function App() {
     localStorage.setItem('finance_dark_mode', String(isDarkMode));
   }, [isDarkMode]);
 
-  useEffect(() => {
-    localStorage.setItem('finance_annual_limit', String(annualLimit));
-  }, [annualLimit]);
 
 
 

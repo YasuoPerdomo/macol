@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Trash2, CheckSquare, Square, Calendar as CalendarIcon, Info } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface TableItem {
   id: string;
@@ -46,6 +47,34 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
       case 'debts': return 'Ej. Tarjeta, Préstamo...';
       case 'savings': return 'Ej. Fondo de Emergencia...';
     }
+  };
+
+  const getEmoji = (desc: string, cat?: string) => {
+    const d = desc.toLowerCase();
+    if (type === 'income') {
+      if (d.includes('salario') || d.includes('sueldo')) return '💼';
+      if (d.includes('freelance') || d.includes('proyecto')) return '💻';
+      return '💵';
+    }
+    if (type === 'debts') return '💳';
+    if (type === 'savings') return '🏦';
+    if (type === 'variable' && cat) {
+      if (cat === 'Comida') return '🍔';
+      if (cat === 'Transporte') return '🚗';
+      if (cat === 'Entretenimiento') return '🎉';
+      if (cat === 'Higiene') return '🧴';
+    }
+    if (d.includes('luz') || d.includes('electricidad')) return '💡';
+    if (d.includes('agua')) return '💧';
+    if (d.includes('gas')) return '🔥';
+    if (d.includes('internet') || d.includes('wifi')) return '🌐';
+    if (d.includes('netflix') || d.includes('cine')) return '🍿';
+    if (d.includes('spotify') || d.includes('musica')) return '🎵';
+    if (d.includes('telefono') || d.includes('celular') || d.includes('movil')) return '📱';
+    if (d.includes('gym') || d.includes('gimnasio')) return '🏋️‍♂️';
+    if (d.includes('seguro')) return '🛡️';
+    if (d.includes('alquiler') || d.includes('renta')) return '🏠';
+    return '📝';
   };
 
   return (
@@ -98,8 +127,16 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
                 </td>
               </tr>
             ) : (
-              items.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+              <AnimatePresence initial={false}>
+                {items.map((item) => (
+                  <motion.tr 
+                    key={item.id} 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                    transition={{ duration: 0.3 }}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
                   {/* Paid checkbox for Fixed Expenses */}
                   {type === 'fixed' && (
                     <td className="p-3 text-center">
@@ -119,13 +156,18 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
 
                   {/* Description cell */}
                   <td className="p-2 sm:p-3">
-                    <input
-                      type="text"
-                      value={item.description}
-                      placeholder={getPlaceholder()}
-                      onChange={(e) => onUpdateItem(item.id, 'description', e.target.value)}
-                      className="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-blue-500 focus:bg-white px-1.5 py-1.5 sm:py-1 rounded transition-all focus:outline-none text-slate-700 font-medium text-sm sm:text-xs"
-                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg" title="Ícono sugerido automáticamente">
+                        {getEmoji(item.description, (item as any).category)}
+                      </span>
+                      <input
+                        type="text"
+                        value={item.description}
+                        placeholder={getPlaceholder()}
+                        onChange={(e) => onUpdateItem(item.id, 'description', e.target.value)}
+                        className="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-blue-500 focus:bg-white px-1.5 py-1.5 sm:py-1 rounded transition-all focus:outline-none text-slate-700 font-medium text-sm sm:text-xs"
+                      />
+                    </div>
                   </td>
 
                   {/* Category dropdown (Variable Expenses only) */}
@@ -199,8 +241,9 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
                       <Trash2 size={14} />
                     </button>
                   </td>
-                </tr>
-              ))
+                </motion.tr>
+              ))}
+            </AnimatePresence>
             )}
           </tbody>
 

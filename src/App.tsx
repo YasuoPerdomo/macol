@@ -18,9 +18,13 @@ import {
   Target,
   AlertTriangle,
   Bell,
-  LogOut
+  LogOut,
+  FileDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import Confetti from 'react-confetti';
+import CountUp from 'react-countup';
+import { exportToPDF, exportToExcel } from './utils/exportUtils';
 import { getInitialData, monthsList, getThemeColors } from './data/initialData';
 import { MonthlyData, ThemeType, IncomeItem, FixedExpenseItem, VariableExpenseItem, DebtItem, SavingItem } from './types';
 import { Calendar } from './components/Calendar';
@@ -64,6 +68,7 @@ export default function App() {
 
   // Current month state (tabs at the bottom): default to 'Sep' (Septiembre)
   const [currentMonthKey, setCurrentMonthKey] = useState('Sep');
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Use Firebase data for allMonthsData and acumuladoMap
   const allMonthsData = firebaseData.allMonthsData;
@@ -173,6 +178,18 @@ export default function App() {
       fixedPaid: { paidCount: totalFixedPaidCount, totalCount: totalFixedCount }
     };
   }, [currentMonthData, currentAcumulado]);
+
+  // Confetti effect when hitting savings goal and having positive remaining balance
+  useEffect(() => {
+    if (totals.restante.real >= 0 && totals.savings.real >= totals.savings.budget && totals.savings.budget > 0) {
+      const storageKey = `confetti_${currentMonthKey}_${totals.savings.real}`;
+      if (!localStorage.getItem(storageKey)) {
+        setShowConfetti(true);
+        localStorage.setItem(storageKey, 'true');
+        setTimeout(() => setShowConfetti(false), 6000);
+      }
+    }
+  }, [totals.restante.real, totals.savings.real, totals.savings.budget, currentMonthKey]);
 
   // Calculations for annual evolution
   const annualData = useMemo(() => {
@@ -461,6 +478,7 @@ export default function App() {
           }}
           id="toolbar"
         >
+          {showConfetti && <Confetti width={window.innerWidth} height={window.innerHeight} recycle={false} numberOfPieces={500} gravity={0.15} />}
           <div className="flex items-baseline gap-2">
             <h2 className="text-3xl font-bold tracking-tight" style={{ color: themeColors.textPrimary }} id="current-month-title">
               {currentMonthData.monthName}
@@ -469,6 +487,25 @@ export default function App() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => exportToPDF(currentMonthData, currentMonthData.monthName)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-xl shadow-xs transition-all hover:bg-slate-100"
+              style={{ backgroundColor: 'transparent', borderColor: themeColors.border, color: themeColors.textPrimary }}
+              title="Exportar a PDF"
+            >
+              <FileDown size={14} className="text-rose-500" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+            <button
+              onClick={() => exportToExcel(currentMonthData, currentMonthData.monthName)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-xl shadow-xs transition-all hover:bg-slate-100"
+              style={{ backgroundColor: 'transparent', borderColor: themeColors.border, color: themeColors.textPrimary }}
+              title="Exportar a Excel"
+            >
+              <FileDown size={14} className="text-emerald-500" />
+              <span className="hidden sm:inline">Excel</span>
+            </button>
+
             <button
               onClick={handleResetMonth}
               id="btn-reset-month"
@@ -680,7 +717,7 @@ export default function App() {
                 </span>
               </div>
               <h3 className="text-2xl font-extrabold font-mono" style={{ color: themeColors.textPrimary }} id="total-egresos-display">
-                {formatCurrency(totals.expenses.real)}
+                <CountUp end={totals.expenses.real} prefix="S/ " separator="," duration={1.5} />
               </h3>
               <p className="text-[10px] mt-1" style={{ color: themeColors.textSecondary }}>
                 Presupuestado: <span className="font-semibold">{formatCurrency(totals.expenses.budget)}</span>
@@ -716,7 +753,7 @@ export default function App() {
             <div className="flex-1">
               <span className="text-xs uppercase tracking-wider font-semibold block mb-1" style={{ color: themeColors.textSecondary }}>Saldo para Gastar</span>
               <h3 className="text-2xl font-extrabold font-mono" style={{ color: themeColors.textPrimary }} id="restante-real-display">
-                {formatCurrency(totals.restante.real)}
+                <CountUp end={totals.restante.real} prefix="S/ " separator="," duration={1.5} />
               </h3>
               <p className="text-[10px] mt-1" style={{ color: themeColors.textSecondary }}>
                 Meta Esperada: <span className="font-semibold">{formatCurrency(totals.restante.budget)}</span>

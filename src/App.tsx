@@ -93,27 +93,7 @@ export default function App() {
     localStorage.setItem('finance_annual_limit', String(annualLimit));
   }, [annualLimit]);
 
-  // Show login screen if not authenticated
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 animate-pulse" style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}>
-            <TrendingUp size={32} className="text-white" />
-          </div>
-          <p className="text-slate-400 text-sm">Cargando Macol...</p>
-        </div>
-      </div>
-    );
-  }
 
-  if (!user) {
-    return <LoginScreen onLogin={login} onRegister={register} error={authError} themeColors={getThemeColors(theme, isDarkMode)} />;
-  }
-
-  if (!userProfile?.coupleId) {
-    return <PairScreen pairCode={userProfile?.pairCode || null} userName={userProfile?.displayName || ''} onPairWithCode={pairWithCode} onRefreshProfile={refreshProfile} onLogout={logout} error={authError} />;
-  }
 
   // Sum of expenses for ALL 12 months (Gasto fijos + Gasto variables)
   const totalAnnualExpenses = useMemo(() => {
@@ -121,10 +101,10 @@ export default function App() {
     let realTotal = 0;
     monthsList.forEach((m) => {
       const mData = allMonthsData[m.key] || getInitialData()[m.key];
-      const fixedBudget = mData.fixedExpenses.reduce((s, item) => s + (item.budget || 0), 0);
-      const fixedReal = mData.fixedExpenses.reduce((s, item) => s + (item.real || 0), 0);
-      const variableBudget = mData.variableExpenses.reduce((s, item) => s + (item.budget || 0), 0);
-      const variableReal = mData.variableExpenses.reduce((s, item) => s + (item.real || 0), 0);
+      const fixedBudget = (mData.fixedExpenses || []).reduce((s, item) => s + (item.budget || 0), 0);
+      const fixedReal = (mData.fixedExpenses || []).reduce((s, item) => s + (item.real || 0), 0);
+      const variableBudget = (mData.variableExpenses || []).reduce((s, item) => s + (item.budget || 0), 0);
+      const variableReal = (mData.variableExpenses || []).reduce((s, item) => s + (item.real || 0), 0);
       
       budgetTotal += (fixedBudget + variableBudget);
       realTotal += (fixedReal + variableReal);
@@ -202,11 +182,11 @@ export default function App() {
       const mData = allMonthsData[m.key] || getInitialData()[m.key];
       const acumulado = acumuladoMap[m.key] || { budget: 0, real: 0 };
 
-      const incomesReal = mData.incomes.reduce((s, item) => s + (item.real || 0), 0);
-      const fixedExpensesReal = mData.fixedExpenses.reduce((s, item) => s + (item.real || 0), 0);
-      const variableExpensesReal = mData.variableExpenses.reduce((s, item) => s + (item.real || 0), 0);
-      const debtsReal = mData.debts.reduce((s, item) => s + (item.real || 0), 0);
-      const savingsReal = mData.savings.reduce((s, item) => s + (item.real || 0), 0);
+      const incomesReal = (mData.incomes || []).reduce((s, item) => s + (item.real || 0), 0);
+      const fixedExpensesReal = (mData.fixedExpenses || []).reduce((s, item) => s + (item.real || 0), 0);
+      const variableExpensesReal = (mData.variableExpenses || []).reduce((s, item) => s + (item.real || 0), 0);
+      const debtsReal = (mData.debts || []).reduce((s, item) => s + (item.real || 0), 0);
+      const savingsReal = (mData.savings || []).reduce((s, item) => s + (item.real || 0), 0);
 
       const totalExpensesReal = fixedExpensesReal + variableExpensesReal;
       const cashFlowRestanteReal = acumulado.real + incomesReal - totalExpensesReal - savingsReal - debtsReal;
@@ -330,6 +310,28 @@ export default function App() {
     const ratio = totals.restante.real / (totals.incomes.real + currentAcumulado.real);
     return Math.max(0, Math.min(100, Math.round(ratio * 100)));
   }, [totals, currentAcumulado]);
+
+  // Show login screen if not authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 animate-pulse" style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}>
+            <TrendingUp size={32} className="text-white" />
+          </div>
+          <p className="text-slate-400 text-sm">Cargando Macol...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen onLogin={login} onRegister={register} error={authError} themeColors={themeColors} />;
+  }
+
+  if (!userProfile?.coupleId) {
+    return <PairScreen pairCode={userProfile?.pairCode || null} userName={userProfile?.displayName || ''} onPairWithCode={pairWithCode} onRefreshProfile={refreshProfile} onLogout={logout} error={authError} />;
+  }
 
   return (
     <div 

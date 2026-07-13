@@ -78,16 +78,16 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
 
       {/* Table content */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full text-left text-xs sm:text-sm border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
-              {type === 'fixed' && <th className="p-3 w-10 text-center">Pago</th>}
-              <th className="p-3">Descripción</th>
-              {type === 'variable' && <th className="p-3 w-36">Categoría</th>}
-              {type === 'fixed' && <th className="p-3 w-28">Vence</th>}
-              <th className="p-3 text-right w-32">Presupuesto</th>
-              <th className="p-3 text-right w-32">Real</th>
-              <th className="p-3 w-10 text-center">Acción</th>
+              {type === 'fixed' && <th className="p-2 sm:p-3 w-10 text-center">Pago</th>}
+              <th className="p-2 sm:p-3">Descripción</th>
+              {type === 'variable' && <th className="p-2 sm:p-3 w-36">Categoría</th>}
+              {type === 'fixed' && <th className="p-2 sm:p-3 w-32 sm:w-36">Vence</th>}
+              <th className="p-2 sm:p-3 text-right w-28 sm:w-32">Presupuesto</th>
+              <th className="p-2 sm:p-3 text-right w-28 sm:w-32">Real</th>
+              <th className="p-2 sm:p-3 w-10 text-center">Acción</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -118,13 +118,13 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
                   )}
 
                   {/* Description cell */}
-                  <td className="p-3">
+                  <td className="p-2 sm:p-3">
                     <input
                       type="text"
                       value={item.description}
                       placeholder={getPlaceholder()}
                       onChange={(e) => onUpdateItem(item.id, 'description', e.target.value)}
-                      className="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-blue-500 focus:bg-white px-1.5 py-1 rounded transition-all focus:outline-none text-slate-700 font-medium"
+                      className="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-blue-500 focus:bg-white px-1.5 py-1.5 sm:py-1 rounded transition-all focus:outline-none text-slate-700 font-medium text-sm sm:text-xs"
                     />
                   </td>
 
@@ -147,44 +147,44 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
 
                   {/* Due Date cell (Fixed Expenses only) */}
                   {type === 'fixed' && (
-                    <td className="p-3">
-                      <div className="flex items-center gap-1 bg-slate-100/50 border border-slate-200 rounded px-1.5 py-1">
-                        <CalendarIcon size={12} className="text-slate-400 flex-shrink-0" />
+                    <td className="p-2 sm:p-3">
+                      <div className="flex items-center gap-1.5 bg-slate-100/50 border border-slate-200 rounded-lg px-2 py-2 sm:py-1.5 min-w-[120px]">
+                        <CalendarIcon size={14} className="text-slate-400 flex-shrink-0" />
                         <input
                           type="text"
                           value={item.due || ''}
                           placeholder="DD/MM/AAAA"
                           onChange={(e) => onUpdateItem(item.id, 'due', e.target.value)}
-                          className="w-full bg-transparent border-none text-[11px] p-0 focus:ring-0 focus:outline-none font-mono text-slate-600"
+                          className="w-full bg-transparent border-none text-sm sm:text-xs p-0 focus:ring-0 focus:outline-none font-mono text-slate-600"
                         />
                       </div>
                     </td>
                   )}
 
                   {/* Budget cell */}
-                  <td className="p-3">
-                    <div className="flex items-center justify-end bg-slate-50 border border-slate-100 rounded px-1.5 py-1 hover:bg-white focus-within:bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-                      <span className="text-slate-400 mr-1">S/</span>
+                  <td className="p-2 sm:p-3">
+                    <div className="flex items-center justify-end bg-slate-50 border border-slate-100 rounded-lg px-2 py-2 sm:py-1 hover:bg-white focus-within:bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+                      <span className="text-slate-400 mr-1 text-sm sm:text-xs">S/</span>
                       <input
                         type="number"
                         value={item.budget || ''}
                         placeholder="0"
                         onChange={(e) => onUpdateItem(item.id, 'budget', parseFloat(e.target.value) || 0)}
-                        className="w-full bg-transparent border-none p-0 text-right focus:ring-0 focus:outline-none font-mono text-slate-700"
+                        className="w-full bg-transparent border-none p-0 text-right focus:ring-0 focus:outline-none font-mono text-slate-700 text-sm sm:text-xs"
                       />
                     </div>
                   </td>
 
                   {/* Real cell */}
-                  <td className="p-3">
-                    <div className="flex items-center justify-end bg-slate-50 border border-slate-100 rounded px-1.5 py-1 hover:bg-white focus-within:bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
-                      <span className="text-slate-400 mr-1">S/</span>
+                  <td className="p-2 sm:p-3">
+                    <div className="flex items-center justify-end bg-slate-50 border border-slate-100 rounded-lg px-2 py-2 sm:py-1 hover:bg-white focus-within:bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-100 transition-all">
+                      <span className="text-slate-400 mr-1 text-sm sm:text-xs">S/</span>
                       <input
                         type="number"
                         value={item.real || ''}
                         placeholder="0"
                         onChange={(e) => onUpdateItem(item.id, 'real', parseFloat(e.target.value) || 0)}
-                        className="w-full bg-transparent border-none p-0 text-right focus:ring-0 focus:outline-none font-mono text-slate-700"
+                        className="w-full bg-transparent border-none p-0 text-right focus:ring-0 focus:outline-none font-mono text-slate-700 text-sm sm:text-xs"
                       />
                     </div>
                   </td>

@@ -50,7 +50,7 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
   };
 
   const getEmoji = (desc: string, cat?: string) => {
-    const d = desc.toLowerCase();
+    const d = (desc || '').toLowerCase();
     if (type === 'income') {
       if (d.includes('salario') || d.includes('sueldo')) return '💼';
       if (d.includes('freelance') || d.includes('proyecto')) return '💻';
@@ -162,7 +162,7 @@ export const FinancialTable: React.FC<FinancialTableProps> = ({
                       </span>
                       <input
                         type="text"
-                        value={item.description}
+                        value={item.description || ''}
                         placeholder={getPlaceholder()}
                         onChange={(e) => onUpdateItem(item.id, 'description', e.target.value)}
                         className="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-blue-500 focus:bg-white px-1.5 py-1.5 sm:py-1 rounded transition-all focus:outline-none text-slate-700 font-medium text-sm sm:text-xs"

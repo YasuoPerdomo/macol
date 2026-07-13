@@ -16,7 +16,9 @@ import {
   Sun,
   Moon,
   Target,
-  AlertTriangle
+  AlertTriangle,
+  Bell,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getInitialData, monthsList, getThemeColors } from './data/initialData';
@@ -25,8 +27,27 @@ import { Calendar } from './components/Calendar';
 import { FinancialTable } from './components/FinancialTable';
 import { DashboardCharts } from './components/DashboardCharts';
 import { AnnualEvolutionChart } from './components/AnnualEvolutionChart';
+import { LoginScreen } from './components/LoginScreen';
+import { PairScreen } from './components/PairScreen';
+import { NotificationBanner } from './components/NotificationBanner';
+import { ActivityLog } from './components/ActivityLog';
+import { useAuth } from './hooks/useAuth';
+import { useFirebaseData } from './hooks/useFirebaseData';
 
 export default function App() {
+  // Auth state
+  const { user, userProfile, loading: authLoading, error: authError, setError: setAuthError, register, login, logout, pairWithCode, refreshProfile } = useAuth();
+
+  // Firebase data (real-time sync)
+  const firebaseData = useFirebaseData({
+    coupleId: userProfile?.coupleId || null,
+    userId: user?.uid || '',
+    userName: userProfile?.displayName || '',
+  });
+
+  // Activity log visibility
+  const [showActivityLog, setShowActivityLog] = useState(false);
+
   // Theme state: default to 'navy' (Azul Marino), options: 'pearl' (Azul Perla), 'steel' (Azul Acero)
   const [theme, setTheme] = useState<ThemeType>(() => {
     const savedTheme = localStorage.getItem('finance_theme');
@@ -48,54 +69,17 @@ export default function App() {
   // Current month state (tabs at the bottom): default to 'Sep' (Septiembre)
   const [currentMonthKey, setCurrentMonthKey] = useState('Sep');
 
-  // Load all monthly data
-  const [allMonthsData, setAllMonthsData] = useState<Record<string, MonthlyData>>(() => {
-    const savedData = localStorage.getItem('finance_all_months_data_v2');
-    if (savedData) {
-      try {
-        return JSON.parse(savedData);
-      } catch (e) {
-        console.error('Error loading finance data', e);
-      }
-    }
-    return getInitialData();
-  });
-
-  // Keep a custom input for Acumulado (starting balance) per month
-  const [acumuladoMap, setAcumuladoMap] = useState<Record<string, { budget: number; real: number }>>(() => {
-    const saved = localStorage.getItem('finance_acumulado_map_v2');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    // Default initial accumulated values
-    return {
-      Ene: { budget: 0, real: 0 },
-      Feb: { budget: 100000, real: 100000 },
-      Mar: { budget: 80000, real: 120000 },
-      Abr: { budget: 250000, real: 280000 },
-      May: { budget: 200000, real: 220000 },
-      Jun: { budget: 150000, real: 160000 },
-      Jul: { budget: 180000, real: 180000 },
-      Ago: { budget: 210000, real: 230000 },
-      Sep: { budget: 50000, real: 50000 }, // Matching image: Acumulado 50.000
-      Oct: { budget: 120000, real: 120000 },
-      Nov: { budget: 100000, real: 100000 },
-      Dic: { budget: 150000, real: 150000 },
-    };
-  });
-
-  // Save data to localStorage when updated
-  useEffect(() => {
-    localStorage.setItem('finance_all_months_data_v2', JSON.stringify(allMonthsData));
-  }, [allMonthsData]);
-
-  useEffect(() => {
-    localStorage.setItem('finance_acumulado_map_v2', JSON.stringify(acumuladoMap));
-  }, [acumuladoMap]);
+  // Use Firebase data for allMonthsData and acumuladoMap
+  const allMonthsData = firebaseData.allMonthsData;
+  const acumuladoMap = firebaseData.acumuladoMap;
+  const setAllMonthsData = (updater: any) => {
+    const newData = typeof updater === 'function' ? updater(allMonthsData) : updater;
+    firebaseData.saveMonthsData(newData);
+  };
+  const setAcumuladoMap = (updater: any) => {
+    const newData = typeof updater === 'function' ? updater(acumuladoMap) : updater;
+    firebaseData.saveAcumulado(newData);
+  };
 
   useEffect(() => {
     localStorage.setItem('finance_theme', theme);
@@ -108,6 +92,28 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('finance_annual_limit', String(annualLimit));
   }, [annualLimit]);
+
+  // Show login screen if not authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}>
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 animate-pulse" style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}>
+            <TrendingUp size={32} className="text-white" />
+          </div>
+          <p className="text-slate-400 text-sm">Cargando Macol...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen onLogin={login} onRegister={register} error={authError} themeColors={getThemeColors(theme, isDarkMode)} />;
+  }
+
+  if (!userProfile?.coupleId) {
+    return <PairScreen pairCode={userProfile?.pairCode || null} userName={userProfile?.displayName || ''} onPairWithCode={pairWithCode} onRefreshProfile={refreshProfile} onLogout={logout} error={authError} />;
+  }
 
   // Sum of expenses for ALL 12 months (Gasto fijos + Gasto variables)
   const totalAnnualExpenses = useMemo(() => {
@@ -228,6 +234,14 @@ export default function App() {
     });
   };
 
+  const tableTypeNames: Record<string, string> = {
+    incomes: 'Ingresos',
+    fixedExpenses: 'Gastos Fijos',
+    variableExpenses: 'Gastos Variables',
+    debts: 'Deudas',
+    savings: 'Ahorros',
+  };
+
   const handleAddItem = (tableType: 'incomes' | 'fixedExpenses' | 'variableExpenses' | 'debts' | 'savings') => {
     setAllMonthsData((prev) => {
       const monthData = { ...prev[currentMonthKey] };
@@ -244,15 +258,21 @@ export default function App() {
       monthData[tableType] = list as any;
       return { ...prev, [currentMonthKey]: monthData };
     });
+    firebaseData.logActivity(`Agregó una fila en ${tableTypeNames[tableType]} (${currentMonthData.monthName})`);
   };
 
   const handleDeleteItem = (tableType: 'incomes' | 'fixedExpenses' | 'variableExpenses' | 'debts' | 'savings', id: string) => {
+    const list = (allMonthsData[currentMonthKey] as any)?.[tableType] || [];
+    const item = list.find((i: any) => i.id === id);
+    const itemName = item?.description || 'elemento';
+
     setAllMonthsData((prev) => {
       const monthData = { ...prev[currentMonthKey] };
       const list = [...(monthData[tableType] as any[])];
       monthData[tableType] = list.filter((item) => item.id !== id) as any;
       return { ...prev, [currentMonthKey]: monthData };
     });
+    firebaseData.logActivity(`Eliminó '${itemName}' de ${tableTypeNames[tableType]} (${currentMonthData.monthName})`);
   };
 
   // Handler for updating the current month's "Acumulado" balance
@@ -278,6 +298,7 @@ export default function App() {
         ...prev,
         [currentMonthKey]: { budget: currentMonthKey === 'Sep' ? 50000 : 100000, real: currentMonthKey === 'Sep' ? 50000 : 100000 },
       }));
+      firebaseData.logActivity(`Restableció los datos de ${currentMonthData.monthName} a valores iniciales`);
     }
   };
 
@@ -288,6 +309,7 @@ export default function App() {
       localStorage.removeItem('finance_all_months_data_v2');
       localStorage.removeItem('finance_acumulado_map_v2');
       setCurrentMonthKey('Sep');
+      firebaseData.logActivity(`Restableció toda la planilla a los valores por defecto`);
     }
   };
 
@@ -315,6 +337,18 @@ export default function App() {
       style={{ backgroundColor: themeColors.background }}
       id="main-app-container"
     >
+      {/* Notification Banner */}
+      <NotificationBanner notification={firebaseData.newNotification} onDismiss={firebaseData.dismissNotification} />
+
+      {/* Activity Log Modal */}
+      {showActivityLog && (
+        <ActivityLog
+          activities={firebaseData.activities}
+          currentUserId={user?.uid || ''}
+          themeColors={themeColors}
+          onClose={() => setShowActivityLog(false)}
+        />
+      )}
       {/* Top Professional Banner */}
       <header 
         className="w-full text-white shadow-md z-10"
@@ -385,6 +419,30 @@ export default function App() {
             >
               {isDarkMode ? <Sun size={16} className="text-amber-400 animate-spin-slow" /> : <Moon size={16} className="text-blue-200" />}
             </button>
+
+            {/* Activity Log Button */}
+            <button
+              onClick={() => setShowActivityLog(true)}
+              className="relative flex items-center justify-center p-2.5 rounded-xl bg-black/15 hover:bg-black/25 text-white border border-white/10 transition-all shadow-md active:scale-95"
+              title="Historial de actividad"
+            >
+              <Bell size={16} />
+              {firebaseData.activities.filter(a => a.userId !== user?.uid && !a.read).length > 0 && (
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full animate-pulse" />
+              )}
+            </button>
+
+            {/* User Info & Logout */}
+            <div className="flex items-center gap-2 bg-black/15 px-3 py-1.5 rounded-xl border border-white/10">
+              <span className="text-xs text-white/80 font-medium hidden sm:inline">{userProfile?.displayName}</span>
+              <button
+                onClick={logout}
+                className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                title="Cerrar sesión"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
           </div>
         </div>
       </header>

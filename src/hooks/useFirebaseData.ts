@@ -96,37 +96,39 @@ export function useFirebaseData({ coupleId, userId, userName }: UseFirebaseDataP
 
   // Save monthly data to Firestore
   const saveMonthsData = useCallback(
-    async (newData: Record<string, MonthlyData>, newAcumulado?: Record<string, { budget: number; real: number }>) => {
+    (newData: Record<string, MonthlyData>, newAcumulado?: Record<string, { budget: number; real: number }>) => {
       if (!coupleId) return;
+
+      // Update local state immediately for fast typing response
+      setAllMonthsData(newData);
+      if (newAcumulado) setAcumuladoMap(newAcumulado);
 
       const dataToSave: any = { months: newData };
       if (newAcumulado) {
         dataToSave.acumulado = newAcumulado;
       }
 
-      await setDoc(doc(db, 'couples', coupleId, 'data', 'monthlyData'), dataToSave, { merge: true });
-      setAllMonthsData(newData);
-      if (newAcumulado) setAcumuladoMap(newAcumulado);
+      setDoc(doc(db, 'couples', coupleId, 'data', 'monthlyData'), dataToSave, { merge: true }).catch(console.error);
     },
     [coupleId]
   );
 
   // Save acumulado
   const saveAcumulado = useCallback(
-    async (newAcumulado: Record<string, { budget: number; real: number }>) => {
+    (newAcumulado: Record<string, { budget: number; real: number }>) => {
       if (!coupleId) return;
-      await setDoc(doc(db, 'couples', coupleId, 'data', 'monthlyData'), { acumulado: newAcumulado }, { merge: true });
       setAcumuladoMap(newAcumulado);
+      setDoc(doc(db, 'couples', coupleId, 'data', 'monthlyData'), { acumulado: newAcumulado }, { merge: true }).catch(console.error);
     },
     [coupleId]
   );
 
   // Save annual limit
   const saveAnnualLimit = useCallback(
-    async (newLimit: number) => {
+    (limit: number) => {
       if (!coupleId) return;
-      await setDoc(doc(db, 'couples', coupleId, 'data', 'monthlyData'), { annualLimit: newLimit }, { merge: true });
-      setAnnualLimit(newLimit);
+      setAnnualLimit(limit);
+      setDoc(doc(db, 'couples', coupleId, 'data', 'monthlyData'), { annualLimit: limit }, { merge: true }).catch(console.error);
     },
     [coupleId]
   );
